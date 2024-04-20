@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_TESTS: "OFF"
+    container_name: grpc_nvidia_app
+    command: /bin/bash -c "./build/gRPCNvidia"
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_TESTS: "ON"
+    container_name: grpc_nvidia_test
+    command: /bin/bash -c "cd build && ctest"
+
+  extension:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILD_TESTS: "OFF"
+        BUILD_PYTHON: "ON"
+    container_name: grpc_nvidia_test

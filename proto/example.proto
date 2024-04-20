@@ -1,0 +1,34 @@
+/*
+ * An Example to Learn how the proto generates files
+ */
+
+syntax = "proto3";
+
+package example;
+
+// Importing the necessary RPC definitions
+import "google/protobuf/empty.proto";
+
+service StreamingService {
+    rpc UnaryCall (Request) returns (Response) {} // Unary RPC, where client sends a request to server and gets a response
+
+    rpc ServerStreamingCall (Request) returns (stream Response) {} // Server streaming RPC, where client sends a request to server and gets a stream to read a sequence of messages back
+    
+    rpc ClientStreamingCall (stream Request) returns (Response) {} // Client streaming RPC, where client writes a sequence of messages and sends them to server, waiting for server to read them all and return a response
+
+    rpc BidirectionalStreamingCall (stream Request) returns (stream Response) {} // Bidirectional streaming RPC, where both sides send a sequence of messages using a read-write stream
+
+    rpc Ping (google.protobuf.Empty) returns (google.protobuf.Empty) {} // Example of an RPC without any request or response data
+}
+
+// Request message definition
+message Request {
+    string message = 1;
+}
+
+// Response message definition
+message Response {
+    string message = 1;
+    int32 code = 2;
+}
+
