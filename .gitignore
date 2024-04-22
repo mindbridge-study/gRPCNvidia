@@ -1,4 +1,5 @@
-/build/
+*/build
+*/_deps
 /dist/
 # /tools/
 /.cache/
