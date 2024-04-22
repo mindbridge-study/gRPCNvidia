@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(gRPCNvidia LANGUAGES C CXX)
 
-option(BUILD_PYTHON_LIBS_RPC "Build the Python bindings." OFF)
 option(BUILD_LIB_RPC "Build the LIBRARY." OFF)
 option(BUILD_SHARED_RPC "Build the LIBRARY AS SHARED." OFF)
 option(BUILD_TESTS_RPC "Build the tests." ON)
@@ -59,7 +58,6 @@ find_package(Threads REQUIRED)
 # Include Library ________________________________________________________________________________
 include_directories(inc)
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.cc") # src files
-set(PYTHON_SOURCES ${SOURCES})
 list(FILTER SOURCES EXCLUDE REGEX ".*extension\\.cc$") # Remove Exntesion because that Python Specific
 # End of Include Library ________________________________________________________________________________
 
@@ -95,7 +93,6 @@ endforeach()
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 # Append Library onto this
-list(APPEND PYTHON_SOURCES ${GENERATED_SOURCES})
 list(APPEND GENERATED_SOURCES ${SOURCES})
 
 set(LIB_TYPE STATIC)
@@ -108,30 +105,6 @@ if(BUILD_LIB_RPC)
   target_link_libraries(${PROJECT_NAME} gRPC::grpc++ gRPC::grpc++_reflection protobuf::libprotobuf Threads::Threads)
 endif()
 # End of Get Proto Files ________________________________________________________________________________
-
-
-# Python Specific Build Library ________________________________________________________________________________
-if (BUILD_PYTHON_LIBS_RPC)
-  set (Python_ADDITIONAL_VERSIONS 3)
-  find_package (PythonLibs REQUIRED)
-  find_package (PythonInterp REQUIRED)
-
-  include_directories("${PYTHON_INCLUDE_DIRS}")
-  list(FILTER SOURCES EXCLUDE REGEX ".*main\\.cc$") # Remove main because we dont want an executable
-
-  add_library(core SHARED ${PYTHON_SOURCES})
-
-  set_target_properties(core PROPERTIES PREFIX "" OUTPUT_NAME "gRPCNvidia")
-
-  if (WIN32)
-    set_target_properties(core PROPERTIES SUFFIX ".pyd")
-  else()
-    set_target_properties(core PROPERTIES SUFFIX ".so")
-  endif()
-
-  target_link_libraries(core "${PYTHON_LIBRARIES}") # Link Python Libraries
-endif()
-# End of Python Specific Build Library ________________________________________________________________________________
 
 
 # Conditional Testing ________________________________________________________________________________
