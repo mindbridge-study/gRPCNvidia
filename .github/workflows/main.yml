@@ -99,16 +99,9 @@ jobs:
           # Workaround for https://github.com/actions/runner/issues/2033
           chown -R $(id -u):$(id -g) $PWD
 
-      - name: Install Docker Compose
-        run: |
-          LATEST_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-          sudo curl -L "https://github.com/docker/compose/releases/download/${LATEST_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version
-
       - name: Run Docker Compose
         run: |
-          docker-compose up test
+          docker-compose up --build test
 
       - name: List directory contents
         run: ls -alh

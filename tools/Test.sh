@@ -1,6 +1,6 @@
 #!/bin/bash
-docker-compose up --build test
-# docker-compose up --build app
+# docker-compose up --build test
+docker-compose up --build app
 
 # IMPORTANT: CHANGE THIS TO YOUR COMPUTEr
 CONTAINER_NAME="grpc_nvidia_app"

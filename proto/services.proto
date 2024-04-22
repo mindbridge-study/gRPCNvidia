@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package imageTransfer;
+
+service ImageService {
+  rpc SendReceiveImageStream (stream ImageRequest) returns (stream ImageResponse); // asyncrhonous
+}
+
+message ImageRequest {
+  bytes image_data = 1;  // The PNG image data as a byte array
+}
+
+message ImageResponse {
+  string message = 1;    // Response or update message during processing
+}
