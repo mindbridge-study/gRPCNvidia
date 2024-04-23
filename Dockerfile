@@ -1,21 +1,22 @@
 FROM ubuntu:latest
 
-ENV DEBIAN_FRONTEND=noninteractive
-
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
     ninja-build \
     git \
-    python3 \
-    python3-dev \
-    python3-pip \
     protobuf-compiler \
     libprotobuf-dev \
     libssl-dev \
+    curl \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
+
+RUN curl -sSL https://github.com/fullstorydev/grpcurl/releases/download/v1.8.5/grpcurl_1.8.5_linux_x86_64.tar.gz -o grpcurl.tar.gz \
+    && tar -xzf grpcurl.tar.gz -C /usr/local/bin \
+    && rm grpcurl.tar.gz
 
 WORKDIR /app
 COPY . /app
 
-RUN cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=YES && cmake --build build -j8
+RUN rm -rf build && cmake -S . -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=YES && ninja -C build

@@ -4,3 +4,4 @@
 # /tools/
 /.cache/
 compile_commands.json
+CMakeCache.txt
