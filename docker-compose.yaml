@@ -7,9 +7,6 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
       - "80:80"
-    depends_on:
-      app:
-        condition: service_healthy
     restart: always
 
   app:
@@ -19,16 +16,5 @@ services:
     container_name: grpc_nvidia_app
     command: /bin/bash -c "./build/gRPCNvidia"
     volumes:
-      - ./:/app
-      - app-build:/app/build
-      - app-deps:/app/_deps
-    healthcheck:
-      test: ["CMD-SHELL", "netstat -an | grep 50051"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 10s
-
-volumes:
-  app-build:
-  app-deps:
+      - ./:/app/
+    restart: always

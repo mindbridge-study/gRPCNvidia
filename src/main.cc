@@ -10,7 +10,7 @@
 #include <grpcpp/server.h>
 #include <grpcpp/server_builder.h>
 #include <grpcpp/server_context.h>
-#include "services.grpc.pb.h"
+#include "route_guide.grpc.pb.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -158,7 +158,7 @@ class RouteGuideImpl final : public RouteGuide::Service {
 
 void RunServer() {
   std::string server_address("0.0.0.0:50051");
-  RouteGuideImpl service();
+  RouteGuideImpl service{};
 
   ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());

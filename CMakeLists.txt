@@ -9,10 +9,6 @@ set(FETCHCONTENT_FULLY_DISCONNECTED OFF)
 option(BUILD_TESTS_RPC "Build the tests." ON)
 option(BUILD_LIB_RPC "Build the main library as an executable" ON)
 
-if (BUILD_TESTS_RPC)
-  enable_testing() # Enables Google Testing
-endif()
-
 # Set C++ Settings
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -67,13 +63,13 @@ file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.cc") # src files
 
 
 # Get Proto Files ________________________________________________________________________________
-get_filename_component(hw_proto "${CMAKE_CURRENT_SOURCE_DIR}/proto/services.proto" ABSOLUTE)
+get_filename_component(hw_proto "${CMAKE_CURRENT_SOURCE_DIR}/proto/route_guide.proto" ABSOLUTE)
 get_filename_component(hw_proto_path "${hw_proto}" DIRECTORY)
 
-set(hw_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/services.pb.cc")
-set(hw_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/services.pb.h")
-set(hw_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/services.grpc.pb.cc")
-set(hw_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/services.grpc.pb.h")
+set(hw_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/route_guide.pb.cc")
+set(hw_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/route_guide.pb.h")
+set(hw_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/route_guide.grpc.pb.cc")
+set(hw_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/route_guide.grpc.pb.h")
 
 add_custom_command(
       OUTPUT "${hw_proto_srcs}" "${hw_proto_hdrs}" "${hw_grpc_srcs}" "${hw_grpc_hdrs}"
@@ -87,6 +83,10 @@ add_custom_command(
 
 list(APPEND GENERATED_SOURCES ${hw_proto_srcs} ${hw_grpc_srcs})
 list(APPEND GENERATED_HEADERS ${hw_proto_hdrs} ${hw_grpc_hdrs})
+
+add_custom_target(GenerateProtos ALL
+  DEPENDS "${hw_proto_srcs}" "${hw_proto_hdrs}" "${hw_grpc_srcs}" "${hw_grpc_hdrs}" "${GENERATED_SOURCES}" "${GENERATED_HEADERS}"
+)
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
@@ -104,6 +104,8 @@ endif()
 # Conditional Testing ________________________________________________________________________________
 if(BUILD_TESTS_RPC)
   # Add GoogleTest
+  enable_testing() # Enables Google Testing
+
   include(FetchContent)
   set(GOOGLETEST_DIR "${FETCHCONTENT_BASE_DIR}/googletest")
   
