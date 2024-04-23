@@ -25,6 +25,8 @@ public:
   ThreadManager& operator=(ThreadManager&&) = delete;
 private:
   std::thread threads[ThreadsAmount];
+
+  void executeThread(std::function<bool(void)> func);
 };
 
 
@@ -32,8 +34,15 @@ private:
 template<size_t ThreadsAmount>
 constexpr ThreadManager<ThreadsAmount>::ThreadManager(ThreadArgument* args) {
   for (size_t i = 0; i < ThreadsAmount; ++i) {
-    threads[i] = std::thread(this, args[i].Runtime);
+    threads[i] = std::thread([this, &args, i]() {
+      this->executeThread(args[i].Runtime);
+    });
   }
+}
+
+template<size_t ThreadsAmount>
+void ThreadManager<ThreadsAmount>::executeThread(std::function<bool(void)> func) {
+  func();
 }
 
 template<size_t ThreadsAmount>
