@@ -49,7 +49,7 @@ jobs:
           BUILD_TESTS=OFF
           BUILD_PYTHON=ON
 
-  BuildTest:
+  Test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -83,29 +83,3 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-
-  Test:
-    runs-on: ubuntu-latest
-    needs: BuildTest
-    container:
-      image: ghcr.io/omarsiwy/grpcnvidia/test:main
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set ownership
-        run: |
-          # Workaround for https://github.com/actions/runner/issues/2033
-          chown -R $(id -u):$(id -g) $PWD
-
-      - name: Run Docker Compose
-        run: |
-          docker-compose up --build test
-
-      - name: List directory contents
-        run: ls -alh
-
-      - name: Run Google Test
-        run: |
-          cd build && ctest

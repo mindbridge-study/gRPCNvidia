@@ -56,6 +56,15 @@ endif()
 # End of Setup GRPC ________________________________________________________________________________
 
 
+# Setup ZeroMQ
+find_package(ZeroMQ REQUIRED)
+find_package(zmqpp REQUIRED)
+
+include_directories(${ZeroMQ_INCLUDE_DIR})
+include_directories(${ZMQPP_INCLUDE_DIRS})
+# End of Setup ZeroMQ
+
+
 # Include Library ________________________________________________________________________________
 include_directories(inc)
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.cc") # src files
@@ -96,16 +105,13 @@ list(APPEND GENERATED_SOURCES ${SOURCES})
 if(BUILD_LIB_RPC)
   add_executable(${PROJECT_NAME} ${GENERATED_SOURCES} ${GENERATED_HEADERS})
   target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
-  target_link_libraries(${PROJECT_NAME} absl::flags absl::flags_parse absl::strings ${_REFLECTION} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
+  target_link_libraries(${PROJECT_NAME} absl::flags absl::flags_parse absl::strings ${_REFLECTION} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF} ${ZeroMQ_LIBRARIES} ${ZMQPP_LIBRARIES})
 endif()
 # End of Get Proto Files ________________________________________________________________________________
 
 
 # Conditional Testing ________________________________________________________________________________
 if(BUILD_TESTS_RPC)
-  # Add GoogleTest
-  enable_testing() # Enables Google Testing
-
   include(FetchContent)
   set(GOOGLETEST_DIR "${FETCHCONTENT_BASE_DIR}/googletest")
   
@@ -119,10 +125,15 @@ if(BUILD_TESTS_RPC)
     add_subdirectory("${GOOGLETEST_DIR}" "${CMAKE_BINARY_DIR}/googletest-build")
   endif()
 
-  # For Windows: Prevent overriding the parent project's compiler/linker settings
-  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  enable_testing()
+  include(GoogleTest)
 
-  # Add the tests directory
-  add_subdirectory(tests)
+  file(GLOB_RECURSE TEST_SOURCES "tests/*.cc" "tests/*.cpp")
+  add_executable(testexec ${TEST_SOURCES})
+  add_dependencies(testexec GenerateProtos)
+
+  target_link_libraries(testexec GTest::gtest_main absl::flags absl::flags_parse absl::strings ${_REFLECTION} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF} ${ZeroMQ_LIBRARIES} ${ZMQPP_LIBRARIES})
+
+  gtest_discover_tests(testexec)
 endif()
 # End of Conditional Testing ________________________________________________________________________________

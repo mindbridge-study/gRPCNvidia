@@ -14,7 +14,26 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: grpc_nvidia_app
-    command: /bin/bash -c "./build/gRPCNvidia"
     volumes:
       - ./:/app/
+    command: /bin/bash -c "./build/gRPCNvidia"
     restart: always
+
+  python:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: grpc_nvidia_python
+    volumes:
+      - ./:/app/
+    command: /bin/bash -c "cd Python && source env/bin/activate && python3 Client.py"
+    restart: always
+  
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: grpc_nvidia_test
+    volumes:
+      - ./:/app/ 
+    command: /bin/bash -c "cd tests && ctest"

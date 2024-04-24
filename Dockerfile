@@ -2,9 +2,16 @@ FROM ubuntu:latest
 
 RUN apt-get update && apt-get install -y \
     build-essential \
+    clang \
+    libzmq5 \
+    libzmq3-dev \
+    libzmqpp-dev \
     cmake \
     ninja-build \
     git \
+    python3 \
+    python3-dev \
+    python3-zmq \
     protobuf-compiler \
     libprotobuf-dev \
     libssl-dev \
@@ -18,5 +25,7 @@ RUN curl -sSL https://github.com/fullstorydev/grpcurl/releases/download/v1.8.5/g
 
 WORKDIR /app
 COPY . /app
+
+RUN cd Python && python3 -m venv env && source env/bin/activate && pip install -r requirements.txt && cd ..
 
 RUN rm -rf build && cmake -S . -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=YES && ninja -C build
