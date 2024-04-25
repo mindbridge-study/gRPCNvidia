@@ -1,102 +1,91 @@
 #pragma once
 
-#include <grpc/grpc.h>
-#include <grpcpp/grpcpp.h>
-#include <grpcpp/security/server_credentials.h>
-#include <grpcpp/server.h>
-#include <grpcpp/server_builder.h>
-#include <grpcpp/server_context.h>
-#include <vector>
-#include <memory>
-#include <mutex>
-#include <chrono>
 #include <iostream>
+#include <memory>
+#include <string>
+#include <thread>
+#include <cassert>
+
+#include <grpcpp/grpcpp.h>
 
 #include "route_guide.grpc.pb.h"
 
-class ServiceImpl : public routeguide::RouteGuide::AsyncService {
+using grpc::Server;
+using grpc::ServerAsyncResponseWriter;
+using grpc::ServerBuilder;
+using grpc::ServerCompletionQueue;
+using grpc::ServerContext;
+using grpc::Status;
+using grpc::ServerAsyncReader;
+using grpc::ServerAsyncWriter;
+using grpc::ServerAsyncReaderWriter;
+using routeguide::RouteGuide;
+using routeguide::ImageChunk;
+using routeguide::UploadStatus;
+
+class ServerImpl final {
 public:
-  explicit ServiceImpl() = default;
-  ~ServiceImpl();
-
-  // Deleted constructors and operators for copy and move
-  ServiceImpl(const ServiceImpl&) = delete;
-  ServiceImpl& operator=(const ServiceImpl&) = delete;
-  ServiceImpl(ServiceImpl&&) = delete;
-  ServiceImpl& operator=(ServiceImpl&&) = delete;
-
-
-
-public:
-  /* Examples
-  grpc::Status SimpleRPC(grpc::ServerContext* context, const routeguide::Point* point, routeguide::Feature* feature) override;
-  grpc::Status ServerStreaming(grpc::ServerContext* context, const grpc::ServerReader<routeguide::Point>* reader, routeguide::RouteSummary* summary) override;
-  grpc::Status ClientStreaming(grpc::ServerContext* context, grpc::ServerReaderWriter<routeguide::Feature, routeguide::Point>* stream) override;
-  grpc::Status BidirectionalStream(grpc::ServerContext* context, grpc::ServerReaderWriter<routeguide::Feature, routeguide::Point>* stream) override;
-  */
-
-  grpc::Status UploadImage(grpc::ServerContext* context, const grpc::ServerReader<routeguide::ImageChunk> *reader, routeguide::UploadStatus * status) override;
-
-  grpc::Status BidirectionalImageTransfer(grpc::ServerContext* context, grpc::ServerReaderWriter<routeguide::ImageChunk, routeguide::ImageChunk>* stream) override;
-
-  void Run();
+  friend class CallData;
 
 private:
-  std::mutex mux_;
-  std::unique_ptr<grpc::ServerCompletionQueue> _queue;
-  std::unique_ptr<grpc::Server> _server;
+  std::unique_ptr<ServerCompletionQueue> cq_;
+  RouteGuide::AsyncService service_;
+  std::unique_ptr<Server> server_;
 
-  class CallData {
-  public:
-    CallData(routeguide::RouteGuide::AsyncService* service, grpc::ServerCompletionQueue* queue)
-      : _service(service), _queue(queue), _responder(&_context), _status(CallStatus::CREATE) {
-      Proceed();
-    }
+public:
+  explicit ServerImpl();
+  ~ServerImpl();
 
-    void Proceed() {
-      switch (_status) {
-        case CallStatus::CREATE: {
-          _status = CallStatus::PROCESS;
-          _service->RequestUploadImage(&_context, &_reader, &_responder, _queue, _queue, this);
-          break;
-        }
-        case CallStatus::PROCESS: {
-          new CallData(_service, _queue); // Prepare to handle the next incoming request
-          ImageChunk chunk;
-          while (_reader.Read(&chunk)) {
-              // Process each chunk; Example: Store it or assemble it
-          }
-          _status = CallStatus::FINISH;
-          _upload_status.set_success(true);
-          _upload_status.set_message("Upload completed successfully");
-          _responder.Finish(_upload_status, Status::OK, this);
-          break;
-        }
-        default: {
-          delete this;
-        }
-      }
-    }
+  // move and copy constructors and operators
+  ServerImpl(const ServerImpl&) = delete;
+  ServerImpl& operator=(const ServerImpl&) = delete;
+  ServerImpl(ServerImpl&&) = delete;
+  ServerImpl& operator=(ServerImpl&&) = delete;
 
-  private:
-    routeguide::RouteGuide::AsyncService* _service;
-    grpc::ServerCompletionQueue* _queue;
-    grpc::ServerContext _context;
-    grpc::ServerAsyncReader<routeguide::UploadStatus, ImageChunk> _reader;
-    routeguide::UploadStatus _upload_status;
-    grpc::ServerAsyncResponseWriter<routeguide::UploadStatus> _responder;
-    enum class CallStatus { CREATE, PROCESS, FINISH };
-    CallStatus _status;
-  };
+  /*
+   *
+   */
+  void Run(uint16_t port);
+private:
+  /*
+   *
+   */
+  void HandleRpcs();
+};
 
-  void HandleRPCs() {
-    new CallData(this, _queue.get()); // Create initial CallData for handling UploadImage
-    void* tag; // Holds a pointer to a CallData instance
-    bool ok;
-    while (true) {
-      GPR_ASSERT(_queue->Next(&tag, &ok));
-      GPR_ASSERT(ok); // Ensure the operation completed successfully
-      static_cast<CallData*>(tag)->Proceed();
-    }
-  }
+
+
+class CallData {
+public:
+  enum CallStatus { CREATE, PROCESS, FINISH };
+  enum Type { UPLOAD_IMAGE, BIDIRECTIONAL_TRANSFER };
+
+private:
+  RouteGuide::AsyncService* service_;
+  ServerCompletionQueue* cq_;
+  ServerContext ctx_;
+  CallStatus status_;
+  Type type_;
+  ServerAsyncReader<UploadStatus, ImageChunk> stream_;
+  ServerAsyncReaderWriter<ImageChunk, ImageChunk> bidi_stream_;
+  ServerImpl* server_;
+  ImageChunk chunk;
+
+public:
+  /*
+   *
+   */
+  CallData(RouteGuide::AsyncService* service, ServerCompletionQueue* cq, Type type, ServerImpl* server);
+  ~CallData();
+
+  // move and copy constructors and operators
+  CallData(const CallData&) = delete;
+  CallData& operator=(const CallData&) = delete;
+  CallData(CallData&&) = delete;
+  CallData& operator=(CallData&&) = delete;
+
+  /*
+   *
+   */
+  void Proceed();
 };

@@ -1,8 +1,10 @@
 #include "Service.h"
 
+constexpr uint16_t port = 50051;  // Default port
+
 int main(int argc, char** argv) {
-  ServiceImpl service;
-  service.Run();
+  ServerImpl server;
+  server.Run(port);
 
   return 0;
 }

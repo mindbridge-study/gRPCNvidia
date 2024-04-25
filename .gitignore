@@ -1,7 +1,7 @@
 /build/
 /_deps/
 /dist/
-# /tools/
+/tools/
 /.cache/
 compile_commands.json
 CMakeCache.txt
