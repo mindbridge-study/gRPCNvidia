@@ -1,0 +1,7 @@
+# Default settings (applies to all languages unless overridden)
+BasedOnStyle: LLVM
+IndentWidth: 4
+
+# Overrides for Protobuf files
+Language: Proto
+BasedOnStyle: Google

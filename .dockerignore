@@ -1,0 +1,10 @@
+/build/
+/_deps/
+/dist/
+/tools/
+/.cache/
+compile_commands.json
+CMakeCache.txt
+/CMakeFiles/
+
+*/env/

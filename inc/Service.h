@@ -1,32 +1,82 @@
 #pragma once
 
+#include <cassert>
+#include <chrono>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <thread>
-#include <cassert>
+#include <vector>
 
 #include <grpcpp/grpcpp.h>
 
 #include "route_guide.grpc.pb.h"
 
 using grpc::Server;
+using grpc::ServerAsyncReader;
+using grpc::ServerAsyncReaderWriter;
 using grpc::ServerAsyncResponseWriter;
+using grpc::ServerAsyncWriter;
 using grpc::ServerBuilder;
 using grpc::ServerCompletionQueue;
 using grpc::ServerContext;
 using grpc::Status;
-using grpc::ServerAsyncReader;
-using grpc::ServerAsyncWriter;
-using grpc::ServerAsyncReaderWriter;
-using routeguide::RouteGuide;
 using routeguide::ImageChunk;
+using routeguide::PingRequest;
+using routeguide::PingResponse;
+using routeguide::RouteGuide;
 using routeguide::UploadStatus;
 
-class ServerImpl final {
+class CallData {
 public:
-  friend class CallData;
+  enum CallStatus { CREATE, PROCESS, FINISH };
+  enum Type { UPLOAD_IMAGE, BIDIRECTIONAL_TRANSFER, PING };
 
+private:
+  // Status of the Call and Type
+  CallStatus status_;
+  Type type_;
+
+  // Service, Queue, and Context
+  RouteGuide::AsyncService *service_;
+  ServerCompletionQueue *cq_;
+  ServerContext ctx_;
+
+  // Reader/Writers
+  ServerAsyncReader<UploadStatus, ImageChunk> stream_;
+  ServerAsyncReaderWriter<ImageChunk, ImageChunk> bidi_stream_;
+  ServerAsyncResponseWriter<PingResponse> responder_;
+
+  // Proto Objects
+  ImageChunk chunk; // might be a nullptr even though address is sent so idk
+  PingRequest ping_request;
+  PingResponse ping_response;
+
+public:
+  /*
+   *
+   */
+  CallData(RouteGuide::AsyncService *service, ServerCompletionQueue *cq,
+           Type type);
+
+  // move and copy constructors and operators
+  CallData(const CallData &) = delete;
+  CallData &operator=(const CallData &) = delete;
+  CallData(CallData &&) = delete;
+  CallData &operator=(CallData &&) = delete;
+
+  /*
+   *
+   */
+  void Proceed();
+
+private:
+  inline void UploadImage();
+  inline void BidirectionalImageTransfer();
+  inline void Ping();
+};
+
+class ServerImpl final {
 private:
   std::unique_ptr<ServerCompletionQueue> cq_;
   RouteGuide::AsyncService service_;
@@ -37,55 +87,19 @@ public:
   ~ServerImpl();
 
   // move and copy constructors and operators
-  ServerImpl(const ServerImpl&) = delete;
-  ServerImpl& operator=(const ServerImpl&) = delete;
-  ServerImpl(ServerImpl&&) = delete;
-  ServerImpl& operator=(ServerImpl&&) = delete;
+  ServerImpl(const ServerImpl &) = delete;
+  ServerImpl &operator=(const ServerImpl &) = delete;
+  ServerImpl(ServerImpl &&) = delete;
+  ServerImpl &operator=(ServerImpl &&) = delete;
 
   /*
    *
    */
   void Run(uint16_t port);
+
 private:
   /*
-   *
+   * Starts an Event loop to handle all incoming RPCs
    */
   void HandleRpcs();
-};
-
-
-
-class CallData {
-public:
-  enum CallStatus { CREATE, PROCESS, FINISH };
-  enum Type { UPLOAD_IMAGE, BIDIRECTIONAL_TRANSFER };
-
-private:
-  RouteGuide::AsyncService* service_;
-  ServerCompletionQueue* cq_;
-  ServerContext ctx_;
-  CallStatus status_;
-  Type type_;
-  ServerAsyncReader<UploadStatus, ImageChunk> stream_;
-  ServerAsyncReaderWriter<ImageChunk, ImageChunk> bidi_stream_;
-  ServerImpl* server_;
-  ImageChunk chunk;
-
-public:
-  /*
-   *
-   */
-  CallData(RouteGuide::AsyncService* service, ServerCompletionQueue* cq, Type type, ServerImpl* server);
-  ~CallData();
-
-  // move and copy constructors and operators
-  CallData(const CallData&) = delete;
-  CallData& operator=(const CallData&) = delete;
-  CallData(CallData&&) = delete;
-  CallData& operator=(CallData&&) = delete;
-
-  /*
-   *
-   */
-  void Proceed();
 };

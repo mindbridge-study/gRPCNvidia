@@ -6,7 +6,7 @@ include(FetchContent)
 set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/_deps)
 set(FETCHCONTENT_FULLY_DISCONNECTED OFF)
 
-option(BUILD_TESTS_RPC "Build the tests." ON)
+option(BUILD_TESTS_RPC "Build the tests." OFF)
 option(BUILD_LIB_RPC "Build the main library as an executable" ON)
 
 # Set C++ Settings
@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_BUILD_TYPE RelWithDebInfo) # Turn off in actual release
 
 # Compiler Optimizations
 if(NOT CMAKE_BUILD_TYPE)
