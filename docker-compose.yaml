@@ -26,10 +26,3 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  test:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: grpc_nvidia_test
-    command: /bin/bash -c "cd build && ctest"

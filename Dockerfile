@@ -48,16 +48,3 @@ RUN ninja -C build
 
 # Run the tests
 RUN cd tests && ctests && cd ..
-
-# Run the server
-RUN ./build/gRPCNvidia
-
-# nginx image to serve the grpc server
-FROM nginx:1.21-alpine
-# Copy the nginx configuration file
-COPY nginx.conf /etc/nginx/nginx.conf
-# Expose the port nginx is listening on
-EXPOSE 80
-
-# Forward traffic to the gRPC server
-CMD ["nginx", "-g", "daemon off;"]
