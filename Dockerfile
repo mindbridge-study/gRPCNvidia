@@ -46,5 +46,4 @@ COPY . .
 RUN cmake -S . -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -DBUILD_TESTS_RPC:BOOL=ON
 RUN ninja -C build
 
-# Run the tests
-RUN cd tests && ctests && cd ..
+RUN cd build && ctest

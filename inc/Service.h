@@ -27,6 +27,9 @@ using routeguide::PingResponse;
 using routeguide::RouteGuide;
 using routeguide::UploadStatus;
 
+/*
+ * Dependency of Server Implementation that will be used to handle RPCs, by detecting their type and routing them asyncrhonously
+ */
 class CallData {
 public:
   enum CallStatus { CREATE, PROCESS, FINISH };
@@ -76,6 +79,9 @@ private:
   inline void Ping();
 };
 
+/*
+ * The Server Implementation, which handles all the RPCs
+ */
 class ServerImpl final {
 private:
   std::unique_ptr<ServerCompletionQueue> cq_;

@@ -7,9 +7,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    depends_on:
-      app:
-        condition: service_healthy
     restart: on-failure
 
   app:
@@ -21,8 +18,3 @@ services:
       - "50051:50051"
     command: /bin/bash -c "cd build && ./gRPCNvidia"
     restart: on-failure
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:50051"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
