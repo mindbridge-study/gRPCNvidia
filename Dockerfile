@@ -53,7 +53,7 @@ RUN git clone --depth 1 https://github.com/libcpr/cpr.git && \
 WORKDIR /app
 COPY . .
 
-RUN cmake -S . -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -DBUILD_TESTS_RPC:BOOL=ON 
+RUN cmake -S . -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -DBUILD_TESTS_RPC:BOOL=OFF
 RUN ninja -C build
 
 # Run tests

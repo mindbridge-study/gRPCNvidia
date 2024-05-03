@@ -1,6 +1,6 @@
 #include "GeminiCon.h"
 
-std::string GeminiCon::SendRequests(const std::vector<uint8_t>& imageBytes) {
+std::pair<std::string, bool> GeminiCon::SendRequests(const std::vector<uint8_t>& imageBytes) {
   // Base64-encode the image bytes
   std::string encodedImage = base64::to_base64(std::string(imageBytes.begin(), imageBytes.end()));
 
@@ -24,7 +24,7 @@ std::string GeminiCon::SendRequests(const std::vector<uint8_t>& imageBytes) {
 
   // Check the response status and return the results
   if (r.status_code == 200) {
-    return r.text;  // Return the raw JSON response text
+    return std::make_pair(r.text, true);  // Return the raw JSON response text
   } else {
     // Log error and return a JSON-formatted error message
     std::cerr << "Failed to get a valid response: " << r.status_code << " " << r.error.message << std::endl;
@@ -34,6 +34,6 @@ std::string GeminiCon::SendRequests(const std::vector<uint8_t>& imageBytes) {
       {"message", "Failed to get a valid response"},
       {"error_details", r.error.message}
     };
-    return error_response.dump(4);
+    return std::make_pair(error_response.dump(4), false);
   }
 }

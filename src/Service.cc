@@ -52,9 +52,6 @@ void ServerImpl::HandleRpcs() {
   }
 }
 
-/*
- * Im thiniking ctx might be null here
- */
 CallData::CallData(RouteGuide::AsyncService *service, ServerCompletionQueue *cq,
                    Type type)
     : type_(type), status_(CREATE), service_(service), cq_(cq), stream_(&ctx_),
@@ -116,7 +113,7 @@ inline void CallData::UploadImage() {
   UploadStatus status;
 
   // Process Image using Gemini
-  const std::pair<std::string, bool> returnmessage = GeminiCon::SendRequests(&imageData);
+  const std::pair<std::string, bool> returnmessage = GeminiCon::SendRequests(imageData);
   status.set_message(returnmessage.first);
   status.set_success(returnmessage.second);
 

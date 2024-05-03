@@ -3,9 +3,10 @@
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 #include <vector>
-#include <string>
 #include <iostream>
 #include "base64.h"
+#include <utility>
+#include <string>
 
 const std::string prompt = R"(
   <examples>
@@ -64,5 +65,5 @@ public:
   GeminiCon(const GeminiCon&&) = delete;
   GeminiCon& operator=(const GeminiCon&&) = delete;
 
-  static std::string SendRequests(const std::vector<uint8_t>& image);
+  static std::pair<std::string, bool> SendRequests(const std::vector<uint8_t>& image);
 };
