@@ -1,5 +1,6 @@
 #include "Service.h"
 #include "AuthMiddleware.h"
+#include "GeminiCon.h"
 
 ServerImpl::ServerImpl() {
   // On Service Start
@@ -39,7 +40,6 @@ void ServerImpl::HandleRpcs() {
   // Create Methods that the function needs
   std::cout << "reached setup";
   new CallData(&service_, cq_.get(), CallData::UPLOAD_IMAGE);
-  new CallData(&service_, cq_.get(), CallData::BIDIRECTIONAL_TRANSFER);
   new CallData(&service_, cq_.get(), CallData::PING);
 
   void *tag;
@@ -58,7 +58,7 @@ void ServerImpl::HandleRpcs() {
 CallData::CallData(RouteGuide::AsyncService *service, ServerCompletionQueue *cq,
                    Type type)
     : type_(type), status_(CREATE), service_(service), cq_(cq), stream_(&ctx_),
-      bidi_stream_(&ctx_), responder_(&ctx_) {
+       responder_(&ctx_) {
   Proceed();
 }
 
@@ -68,9 +68,6 @@ void CallData::Proceed() {
     std::cout << "request asked";
     if (type_ == UPLOAD_IMAGE)
       service_->RequestUploadImage(&ctx_, &stream_, cq_, cq_, this);
-    else if (type_ == BIDIRECTIONAL_TRANSFER)
-      service_->RequestBidirectionalImageTransfer(&ctx_, &bidi_stream_, cq_,
-                                                  cq_, this);
     else if (type_ == PING)
       service_->RequestPing(&ctx_, &ping_request, &responder_, cq_, cq_, this);
     status_ = PROCESS;
@@ -85,8 +82,6 @@ void CallData::Proceed() {
     std::cout << "reached functions";
     if (type_ == UPLOAD_IMAGE)
       UploadImage();
-    else if (type_ == BIDIRECTIONAL_TRANSFER)
-      BidirectionalImageTransfer();
     else if (type_ == PING)
       Ping();
 
@@ -119,29 +114,16 @@ inline void CallData::UploadImage() {
 
   // Once all chunks have been read, send a response back
   UploadStatus status;
-  status.set_success(true);
-  status.set_message("Image received successfully");
+
+  // Process Image using Gemini
+  const std::pair<std::string, bool> returnmessage = GeminiCon::SendRequests(&imageData);
+  status.set_message(returnmessage.first);
+  status.set_success(returnmessage.second);
 
   status_ = FINISH;
 
   // Sending the response back to the client
   stream_.Finish(status, grpc::Status::OK, this);
-}
-
-inline void CallData::BidirectionalImageTransfer() {
-  std::cout << "Image Transfer?";
-  routeguide::ImageChunk chunk;
-
-  // Reading and immediately writing back each chunk
-  do {
-    bidi_stream_.Read(&chunk, this);
-    bidi_stream_.Write(chunk, this);
-  } while (chunk.data().size() > 0);
-
-  status_ = FINISH;
-
-  // Optionally finalize the stream after all data has been echoed back
-  bidi_stream_.Finish(grpc::Status::OK, this);
 }
 
 inline void CallData::Ping() {

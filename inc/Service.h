@@ -38,7 +38,7 @@ using grpc::experimental::ServerRpcInfo;
 class CallData {
 public:
   enum CallStatus { CREATE, PROCESS, FINISH };
-  enum Type { UPLOAD_IMAGE, BIDIRECTIONAL_TRANSFER, PING };
+  enum Type { UPLOAD_IMAGE, PING };
 
 private:
   // Status of the Call and Type
@@ -52,7 +52,6 @@ private:
 
   // Reader/Writers
   ServerAsyncReader<UploadStatus, ImageChunk> stream_;
-  ServerAsyncReaderWriter<ImageChunk, ImageChunk> bidi_stream_;
   ServerAsyncResponseWriter<PingResponse> responder_;
 
   // Proto Objects
@@ -80,7 +79,6 @@ public:
 
 private:
   inline void UploadImage();
-  inline void BidirectionalImageTransfer();
   inline void Ping();
 };
 
