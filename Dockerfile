@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y \
     autoconf \
     automake \
     libtool \
+    libcurl4-openssl-dev \
     nginx \
     && rm -rf /var/lib/apt/lists/*
 
@@ -40,10 +41,20 @@ RUN cd /tmp && \
 # Install grpcurl (TESTING ONLY)
 RUN curl -sSL https://github.com/fullstorydev/grpcurl/releases/download/v1.8.5/grpcurl_1.8.5_linux_x86_64.tar.gz | tar -xzC /usr/local/bin
 
+# Install cpr
+RUN git clone --depth 1 https://github.com/libcpr/cpr.git && \
+    cd cpr && \
+    mkdir build && \
+    cd build && \
+    cmake .. -DCPR_USE_SYSTEM_CURL=ON && \
+    cmake --build . --parallel && \
+    cmake --install .
+
 WORKDIR /app
 COPY . .
 
-RUN cmake -S . -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -DBUILD_TESTS_RPC:BOOL=ON
+RUN cmake -S . -B build -G Ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=YES -DBUILD_TESTS_RPC:BOOL=ON 
 RUN ninja -C build
 
+# Run tests
 RUN cd build && ctest

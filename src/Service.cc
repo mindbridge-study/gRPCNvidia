@@ -1,4 +1,5 @@
 #include "Service.h"
+#include "AuthMiddleware.h"
 
 ServerImpl::ServerImpl() {
   // On Service Start
@@ -15,6 +16,12 @@ void ServerImpl::Run(uint16_t port) {
   ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
   builder.RegisterService(&service_);
+  
+  // Firebase Auth Interceptor
+  std::vector<std::unique_ptr<ServerInterceptorFactoryInterface>> creators;
+  creators.push_back(std::unique_ptr<ServerInterceptorFactoryInterface>(new LoggingInterceptorFactory()));
+  builder.experimental().SetInterceptorCreators(std::move(creators));
+
   this->cq_ = builder.AddCompletionQueue();
   this->server_ = builder.BuildAndStart();
 
